@@ -20,7 +20,7 @@
 | `AI_WORKFLOW.md` | How AI was used and verified |
 | `WALKTHROUGH_SCRIPT.md` | Recording outline |
 | `WALKTHROUGH_URL.txt` | Walkthrough video link |
-| `screenshots/` | Real screenshots only (to be captured from the running app) |
+| `screenshots/` | 5 real screenshots of the deployed app (see `screenshots/README.md`) |
 | `.env.example` | Environment variable names only |
 
 ## Feature checklist

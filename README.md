@@ -19,6 +19,16 @@ A lightweight document editor inspired by Google Docs. You can create, format, r
 - The open document is kept in the URL (`?doc=<id>`), so a refresh reopens it.
 - Responsive layout: on small screens the sidebar becomes a drawer.
 
+## Screenshots
+
+| Owner editing | Share dialog |
+| --- | --- |
+| ![Owner editing a document](screenshots/02-owner-editor.png) | ![Share dialog](screenshots/03-share-dialog.png) |
+| **Recipient with edit access** | **Recipient with view-only access** |
+| ![Recipient with edit access](screenshots/04-recipient-editor-access.png) | ![View-only document](screenshots/05-recipient-view-only.png) |
+
+**Live app:** https://ajaia-docs-olive-one.vercel.app/ · **Walkthrough video:** https://www.loom.com/share/5ea3aab7624e4789a206aebd67406f8e
+
 ## Tech stack
 
 React 19, TypeScript, Vite 8, Tailwind CSS 4, Tiptap 3 (StarterKit), Supabase (Postgres, Auth, RLS) and `@supabase/supabase-js`. Tests use Vitest, React Testing Library and PGlite (Postgres compiled to WASM) for the database tests. There is no custom backend server.
