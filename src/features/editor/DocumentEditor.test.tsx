@@ -94,6 +94,21 @@ describe('DocumentEditor', () => {
     expect(screen.getByRole('button', { name: 'Normal text' })).toHaveAttribute('aria-pressed', 'false')
   })
 
+  it('font size control shows the default size and applies a new one to the selection', async () => {
+    renderEditor(doc())
+    const sizeInput = await screen.findByRole('textbox', { name: 'Font size in points' })
+    expect(sizeInput).toHaveValue('11')
+    await userEvent.click(screen.getByRole('button', { name: 'Increase font size' }))
+    expect(sizeInput).toHaveValue('12')
+    await userEvent.clear(sizeInput)
+    await userEvent.type(sizeInput, '30{Enter}')
+    expect(sizeInput).toHaveValue('30')
+    // With no text selected, 30pt is pending for the next typed text; turning the
+    // line into Heading 1 shows that block's default size instead.
+    await userEvent.click(screen.getByRole('button', { name: 'Heading 1' }))
+    expect(sizeInput).toHaveValue('20')
+  })
+
   it('File menu: "Make a copy" saves the current content as a new document the user owns', async () => {
     const copy = { id: 'd2', title: 'Copy of Spec', ownerId: 'u2', updatedAt: 't', role: 'owner' as const }
     mocked.createDocument.mockResolvedValue(copy)

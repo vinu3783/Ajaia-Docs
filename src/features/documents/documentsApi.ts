@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { JSONContent } from '@tiptap/core'
 import { AccessLostError } from '../../lib/errors'
-import { EMPTY_DOC, isDocJSON } from '../editor/content'
+import { EMPTY_DOC, isDocJSON, sanitizeDoc } from '../editor/content'
 import {
   DEFAULT_TITLE,
   type AccessRole,
@@ -80,7 +80,7 @@ export async function getDocument(db: SupabaseClient, id: string, userId: string
     ownerEmail = shareRow.document?.owner?.email
   }
 
-  const content: JSONContent = isDocJSON(row.content) ? row.content : EMPTY_DOC
+  const content: JSONContent = isDocJSON(row.content) ? sanitizeDoc(row.content) : EMPTY_DOC
   return { ...toSummary(row, role, ownerEmail), content }
 }
 

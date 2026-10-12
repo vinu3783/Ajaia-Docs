@@ -59,6 +59,14 @@ Every item below happened during this session.
    - The cause: the earlier builds had run before `.env.local` existed. `isSupabaseConfigured` was therefore a constant `false`, and the bundler dropped supabase-js as dead code.
    - The new features added almost nothing (580.28 kB in both builds without Supabase settings). The earlier "184 kB" figure did not represent a real deployment, and it was corrected to 263 kB gzipped everywhere it appeared.
 
+10. **Follow-up request: real page gaps and a font size control.**
+    - The user pointed out that the dashed markers had no real gap: text ran straight across the page boundary. The overlay was replaced with block-level pagination, using measured spacer decorations, with the page-break logic as a pure, unit-tested function. The remaining limit was stated up front: paragraphs move to the next page whole rather than splitting line by line.
+    - A component test failed at the font-size step. Stack traces showed a real race. Tiptap's `focus()` runs on a **timer**, so clicking `+` and then quickly typing in the size box let that delayed focus pull the cursor out of the box mid-number (it produced 6 pt instead of 30). The `+`/`–` buttons no longer call `focus()`; they don't need to, because they already preserve the editor's selection.
+    - An earlier version of that test asserted the wrong thing: that a pending size with no text selected survives switching to H1. It doesn't, and shouldn't. The assertion was corrected to the real behaviour.
+    - The headless-Chrome run found **a real bug unrelated to the new features**: React warned about duplicate keys in the sidebar. A window-focus list refresh could finish while "New document" was saving and already include the new row, and the create handler then added it again. Adding a document now de-duplicates by id. A regression test reproduces the race, and it was confirmed to fail without the fix.
+    - The first screenshot after the visual fix still looked wrong. The cause was **not** the code: the Vite dev server was serving a stale copy of `paginationExtension.ts`. That file had been created after the server started, and on this exFAT drive the file watcher did not pick up its later edits. This was confirmed by fetching the module from the dev server and comparing it with the file on disk. Restarting the server fixed it.
+    - The script's own title edits had failed twice, because headless Chrome on macOS ignores ⌘A. The script now selects the field's text directly, and the title came out correctly.
+
 ## How correctness was checked
 
 - `npm test` runs all automated tests (see SUBMISSION.md for the latest run). These include 15 RLS tests on real Postgres (PGlite), 5 autosave race tests with fake timers, import validation and conversion tests, rich-text round-trips through a real headless Tiptap editor, and React component tests.

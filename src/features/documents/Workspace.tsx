@@ -60,6 +60,12 @@ export function Workspace({ client, user }: { client: SupabaseClient; user: User
     return () => window.removeEventListener('popstate', onPop)
   }, [])
 
+  // A list refresh (e.g. on window focus) can finish while a create is in flight and
+  // already include the new document, so never add the same id twice.
+  const addOwned = useCallback((doc: DocumentSummary) => {
+    setOwned((docs) => [doc, ...docs.filter((d) => d.id !== doc.id)])
+  }, [])
+
   const select = useCallback((id: string | null) => {
     setSelectedId(id)
     setSidebarOpen(false)
@@ -74,7 +80,7 @@ export function Workspace({ client, user }: { client: SupabaseClient; user: User
     setActionError(null)
     try {
       const doc = await createDocument(client)
-      setOwned((docs) => [doc, ...docs])
+      addOwned(doc)
       select(doc.id)
     } catch (err) {
       setActionError(toUserMessage(err, 'Could not create a document.'))
@@ -89,7 +95,7 @@ export function Workspace({ client, user }: { client: SupabaseClient; user: User
     try {
       const imported = await importFile(file)
       const doc = await createDocument(client, imported)
-      setOwned((docs) => [doc, ...docs])
+      addOwned(doc)
       select(doc.id)
     } catch (err) {
       setActionError(toUserMessage(err, 'Could not import that file.'))
@@ -111,10 +117,10 @@ export function Workspace({ client, user }: { client: SupabaseClient; user: User
 
   const handleCopied = useCallback(
     (doc: DocumentSummary) => {
-      setOwned((docs) => [doc, ...docs])
+      addOwned(doc)
       select(doc.id)
     },
-    [select],
+    [addOwned, select],
   )
 
   const handleDeleted = useCallback(

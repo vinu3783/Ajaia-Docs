@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useEditorState, type Editor } from '@tiptap/react'
+import { FontSizeControl } from './FontSizeControl'
 
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
 const mod = isMac ? '⌘' : 'Ctrl+'
@@ -82,6 +83,8 @@ export function Toolbar({ editor, disabled = false }: { editor: Editor; disabled
       <ToolButton label="Heading 2" shortcut={`${mod}${alt}2`} active={state.h2} disabled={disabled} onClick={() => run().toggleHeading({ level: 2 }).run()}>
         <span className="font-semibold">H2</span>
       </ToolButton>
+      <Divider />
+      <FontSizeControl editor={editor} disabled={disabled} />
       <Divider />
       <ToolButton label="Bold" shortcut={`${mod}B`} active={state.bold} disabled={disabled} onClick={() => run().toggleBold().run()}>
         <span className="font-bold">B</span>

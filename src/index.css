@@ -35,20 +35,25 @@
 
 /* Document typography (ProseMirror output). */
 .doc-content {
-  @apply min-h-[50vh] text-[15px] leading-7 text-slate-800 outline-none;
+  @apply min-h-[50vh] text-slate-800 outline-none;
+  font-size: 11pt;
+  line-height: 1.6;
   overflow-wrap: anywhere;
 }
 .doc-content > * + * {
   @apply mt-3;
 }
 .doc-content h1 {
-  @apply mt-6 text-3xl font-bold leading-tight text-slate-900 first:mt-0;
+  @apply mt-6 font-bold leading-tight text-slate-900 first:mt-0;
+  font-size: 20pt;
 }
 .doc-content h2 {
-  @apply mt-5 text-2xl font-semibold leading-snug text-slate-900 first:mt-0;
+  @apply mt-5 font-semibold leading-snug text-slate-900 first:mt-0;
+  font-size: 16pt;
 }
 .doc-content h3 {
-  @apply mt-4 text-xl font-semibold text-slate-900 first:mt-0;
+  @apply mt-4 font-semibold text-slate-900 first:mt-0;
+  font-size: 14pt;
 }
 .doc-content ul {
   @apply list-disc pl-6;
@@ -63,7 +68,8 @@
   @apply border-l-4 border-slate-200 pl-4 text-slate-600;
 }
 .doc-content code {
-  @apply rounded bg-slate-100 px-1 py-0.5 font-mono text-[13px];
+  @apply rounded bg-slate-100 px-1 py-0.5 font-mono;
+  font-size: 0.9em;
 }
 .doc-content pre {
   @apply overflow-x-auto rounded-md bg-slate-900 p-4 text-slate-100;
@@ -77,6 +83,14 @@
 .doc-content p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   @apply pointer-events-none float-left h-0 text-slate-400;
+}
+
+/* Page-break spacers inserted by the Pagination extension. */
+.doc-content .page-spacer {
+  display: block;
+  margin-top: 0 !important;
+  user-select: none;
+  pointer-events: none;
 }
 
 /* A4 sheet: on desktop it is at least as tall as the pages it spans. */
@@ -109,6 +123,13 @@
   }
   .doc-content {
     min-height: 0;
+  }
+  /* Break the printed pages exactly where the screen does. */
+  .doc-content .page-spacer {
+    display: none !important;
+  }
+  .doc-content .page-break-before {
+    break-before: page;
   }
   .doc-content h1,
   .doc-content h2,

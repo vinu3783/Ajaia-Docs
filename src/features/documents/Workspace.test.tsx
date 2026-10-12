@@ -59,6 +59,25 @@ describe('Workspace', () => {
     expect(window.location.search).toBe(`?doc=${created.id}`)
   })
 
+  it('does not list a new document twice if a list refresh already returned it', async () => {
+    const created = summary({ title: 'Fresh doc' })
+    let finishCreate!: (d: DocumentSummary) => void
+    mocked.createDocument.mockImplementation(() => new Promise((res) => (finishCreate = res)))
+    mocked.getDocument.mockResolvedValue({ ...created, content: EMPTY_DOC })
+    renderWorkspace()
+    await screen.findByText('No documents yet.')
+
+    await userEvent.click(within(screen.getByRole('complementary')).getByRole('button', { name: /new document/i }))
+    // The window regains focus while the insert is in flight; the refresh sees the new row.
+    mocked.listOwnedDocuments.mockResolvedValue([created])
+    window.dispatchEvent(new Event('focus'))
+    await within(screen.getByRole('navigation', { name: 'Documents' })).findByText('Fresh doc')
+    finishCreate(created)
+
+    await waitFor(() => expect(screen.getByLabelText('Document title')).toHaveValue('Fresh doc'))
+    expect(within(screen.getByRole('navigation', { name: 'Documents' })).getAllByText('Fresh doc')).toHaveLength(1)
+  })
+
   it('shows owned and shared documents in separate sections and filters them', async () => {
     mocked.listOwnedDocuments.mockResolvedValue([summary({ id: 'a', title: 'Budget' })])
     mocked.listSharedDocuments.mockResolvedValue([

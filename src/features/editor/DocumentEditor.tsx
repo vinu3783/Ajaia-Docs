@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { EditorContent, useEditor } from '@tiptap/react'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
@@ -11,6 +11,7 @@ import { ShareDialog } from '../sharing/ShareDialog'
 import { ROLE_LABELS, capabilitiesFor } from '../sharing/permissions'
 import { editorExtensions } from './extensions'
 import { PagedSheet } from './PagedSheet'
+import { Pagination } from './paginationExtension'
 import { SaveStatusIndicator } from './SaveStatusIndicator'
 import { Toolbar } from './Toolbar'
 import { useAutosave } from './useAutosave'
@@ -45,8 +46,11 @@ export function DocumentEditor({ client, doc, onChanged, onDeleted, onCopied }: 
   )
   const autosave = useAutosave(save)
 
+  const [pages, setPages] = useState(1)
+  const extensions = useMemo(() => [...editorExtensions, Pagination.configure({ onPagesChange: setPages })], [])
+
   const editor = useEditor({
-    extensions: editorExtensions,
+    extensions,
     content: doc.content,
     editable: caps.canEdit,
     enableContentCheck: true,
@@ -195,8 +199,8 @@ export function DocumentEditor({ client, doc, onChanged, onDeleted, onCopied }: 
         )}
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto bg-slate-100/70 px-2 py-4 sm:px-6 sm:py-8 print:block print:overflow-visible print:bg-white print:p-0">
-        <PagedSheet>
+      <div className="min-h-0 flex-1 overflow-y-auto bg-slate-100 px-2 py-4 sm:px-6 sm:py-8 print:block print:overflow-visible print:bg-white print:p-0">
+        <PagedSheet pages={pages}>
           <EditorContent editor={editor} />
         </PagedSheet>
       </div>

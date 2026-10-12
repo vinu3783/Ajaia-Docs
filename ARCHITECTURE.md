@@ -82,11 +82,21 @@ The flow is: `<input accept=".txt,.md,...">` → `validateImportFile` → `TextD
 
 ## Page layout, print and export
 
-- **A4 sheet.** `PagedSheet` renders the editor on a 794 px wide sheet, which is A4 at CSS 96 dpi, with 96 px (1 in) margins. A `ResizeObserver` watches the *content* height and computes `pageCountFor(h) = ceil((h + 2·96) / 1123)`. It then draws a dashed marker every 1123 px and sets the sheet's minimum height to a whole number of pages. The content is measured rather than the sheet, because the sheet's minimum height depends on the page count; measuring the sheet would stop the count from ever going back down.
-- **This is a guide, not pagination.** In real Chrome, 40 two-line paragraphs gave 3 pages on screen but printed as 4. The print engine avoids splitting short paragraphs across pages, which adds space at each break. True pagination would require laying content out across separate page boxes, for example with a paid Tiptap Pages extension or a custom layout engine.
-- **Print.** `@page { size: A4; margin: 25.4mm }`. Print-only utilities hide the sidebar, header and toolbar. They also remove the fixed-height, overflow-hidden app shell, so long documents continue onto further pages instead of being clipped. Verified by printing to PDF in headless Chrome: the paper size is 595 × 842 pt (A4) and all 40 paragraphs appear across the pages.
+- **Pagination.** This is real block-level pagination, not an overlay.
+  - `paginationExtension.ts` is a ProseMirror plugin. After each change (batched to one `requestAnimationFrame`), it measures every *unit*: each top-level block, and each item of a list.
+  - It subtracts the spacers it has already inserted, giving each unit's natural position. It then passes those positions to `paginate()` in `pageLayout.ts`, a pure function with unit tests.
+  - Any unit that would cross the bottom of a page's 931 px content area is pushed to the top of the next page by a **widget decoration**: a non-editable spacer whose height covers the rest of the page, the bottom margin, a 20 px grey gap, and the next page's top margin. The spacer paints only the grey gap, which bleeds past the sheet edges to hide its shadow, so the two sheets look separate.
+  - Spacers are decorations, so they are **never saved** in the document, never enter undo history, and never trigger autosave (the plugin's transactions don't change the document).
+  - A unit taller than a whole page is left in place, since it can't fit anywhere. Pagination is turned off below 640 px wide, where the sheet isn't A4-sized.
+  - `PagedSheet` sets the sheet's minimum height to `pages × 1123 + (pages − 1) × 20`.
+- **Why block-level.** Splitting a paragraph line by line across pages, as Google Docs does, needs a layout engine that lays text out into separate page boxes. That is much more work and risk than this assignment's scope allows.
+- **Print.** `@page { size: A4; margin: 25.4mm }`, matching the 96 px screen margins. When printing, spacers are hidden and each block that starts a page on screen gets `break-before: page` through a node decoration. Printed pages therefore break exactly where the screen does. Verified in headless Chrome: 3 pages on screen and 3 in the PDF, with page 2 starting at the same list item. Print-only utilities hide the sidebar, header and toolbar, and remove the fixed-height app shell so nothing is clipped.
 - **Export.** This is entirely client-side. A Blob is downloaded through a temporary `<a download>` link. HTML export wraps `editor.getHTML()`, which can only contain node types from the schema, and escapes the title. Markdown export (`docToMarkdown`) is the inverse of the importer. It escapes text that would otherwise be read as Markdown syntax. A test checks that export followed by import gives back the same document.
 - **Make a copy** inserts a new document with the on-screen content, including edits that haven't been saved yet. Because it goes through the normal insert under RLS, the copy is always owned by the person copying, even if they were only a viewer of the original.
+
+## Font size
+
+`TextStyle` + `FontSize` from `@tiptap/extension-text-style` store sizes as a `textStyle` mark, for example `{ fontSize: "14pt" }`. Choosing the block's default size removes the mark instead of storing it. When a document loads, `sanitizeDoc` drops any font size outside 6–96 pt or not in `Npt` form. This adds to Tiptap's own guard, which already rejects `;`, `{` and `}` in style values.
 
 ## Trade-offs
 

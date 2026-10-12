@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { createTestEditor } from '../../test/editorHarness'
-import { EMPTY_DOC, isDocJSON } from './content'
+import { EMPTY_DOC, isDocJSON, sanitizeDoc } from './content'
 
 describe('rich-text serialization', () => {
   it('preserves formatting through save (JSON) and load', () => {
@@ -52,6 +52,27 @@ describe('rich-text serialization', () => {
     expect(html).toContain('<ol><li><p>number</p></li></ol>')
     editor.destroy()
     reloaded.destroy()
+  })
+
+  it('preserves font sizes through save and load', () => {
+    const editor = createTestEditor({ type: 'doc', content: [{ type: 'paragraph', content: [{ type: 'text', text: 'big words' }] }] })
+    editor.chain().setTextSelection({ from: 1, to: 4 }).setFontSize('24pt').run()
+    const reloaded = createTestEditor(JSON.parse(JSON.stringify(editor.getJSON())))
+    expect(reloaded.getHTML()).toBe('<p><span style="font-size: 24pt;">big</span> words</p>')
+    editor.destroy()
+    reloaded.destroy()
+  })
+
+  it('drops stored font sizes outside 6–96pt or in unexpected formats', () => {
+    const withSize = (fontSize: unknown) => ({
+      type: 'doc',
+      content: [{ type: 'paragraph', content: [{ type: 'text', text: 'x', marks: [{ type: 'bold' }, { type: 'textStyle', attrs: { fontSize } }] }] }],
+    })
+    const marksOf = (fontSize: unknown) => sanitizeDoc(withSize(fontSize)).content![0].content![0].marks
+    expect(marksOf('14pt')).toEqual([{ type: 'bold' }, { type: 'textStyle', attrs: { fontSize: '14pt' } }])
+    expect(marksOf('500pt')).toEqual([{ type: 'bold' }])
+    expect(marksOf('12px; background: url(https://evil.example)')).toEqual([{ type: 'bold' }])
+    expect(marksOf(null)).toEqual([{ type: 'bold' }])
   })
 
   it('supports undo and redo', () => {

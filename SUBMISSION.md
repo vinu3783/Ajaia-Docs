@@ -44,11 +44,12 @@
 | Viewer read-only / editor can edit / only owner shares or deletes | Implemented | RLS tests plus component tests |
 | Ownership cannot be changed by the client | Implemented | Column grants plus trigger, both tested |
 | Responsive layout with mobile drawer | Implemented | Headless Chrome at 390 px wide: no horizontal overflow (screenshot reviewed) |
-| A4 page layout with page markers | Partial (visual guide) | Headless Chrome: 794 px sheet, "Page 2/3" markers. On-screen breaks are approximate; printed breaks can differ by a few lines. |
-| Print / Save as PDF on A4 | Implemented | Headless Chrome PDF: A4 paper (595 × 842 pt), all content present across pages |
+| A4 pages with gaps (block-level pagination) | Implemented | Unit tests for `paginate`. Headless Chrome against live Supabase: 41 blocks, 0 crossing a page boundary; 3 pages on screen = 3 in the PDF, with the same break points. |
+| Font size control (pt) | Implemented | Component test, serialization test, sanitizer test. Headless Chrome: 24 pt applied, still 24 pt after reload. |
+| Print / Save as PDF on A4 | Implemented | Headless Chrome PDF: A4 paper (595 × 842 pt); page breaks match the screen |
 | Download as .md / .txt / .html | Implemented | Unit tests (Markdown export → import round-trip) and a component test |
 | Make a copy ("Save as") | Implemented | Component test; headless Chrome against live Supabase (copy opened with full content) |
-| True pagination (text re-flowed into separate page boxes) | Not implemented | Page markers are guides only |
+| Line-level pagination (splitting a paragraph across pages) | Not implemented | Paragraphs move to the next page whole |
 | Real-time collaboration | Not implemented | Out of scope; last write wins |
 | Deployment | Not done | Blocked on external accounts |
 
@@ -59,22 +60,22 @@ Run locally on 2026-10-12 with Node 24.4.1:
 ```
 $ npm test
  Test Files  10 passed (10)
-      Tests  63 passed (63)
+      Tests  70 passed (70)
 
   15  supabase/tests/rls.test.ts            (real Postgres via PGlite; emulated Supabase auth)
   14  src/features/import/importFile.test.ts
-   8  src/features/editor/DocumentEditor.test.tsx   (API mocked)
-   5  src/features/documents/Workspace.test.tsx     (API mocked)
+   9  src/features/editor/DocumentEditor.test.tsx   (API mocked)
+   6  src/features/documents/Workspace.test.tsx     (API mocked)
    5  src/features/documents/documentsApi.test.ts   (fake client)
    5  src/features/editor/autosave.test.ts
-   3  src/features/editor/serialization.test.ts
+   5  src/features/editor/serialization.test.ts
    1  src/features/sharing/permissions.test.ts
    5  src/features/export/exportDocument.test.ts    (incl. Markdown export → import round-trip)
-   2  src/features/editor/pageLayout.test.ts
+   5  src/features/editor/pageLayout.test.ts
 
 $ npm run lint        → no problems
 $ npm run typecheck   → no errors
-$ npm run build       → success (JS 875 kB / 263 kB gzip with Supabase configured; Vite warns about the >500 kB chunk)
+$ npm run build       → success (JS 884 kB / 266 kB gzip with Supabase configured; Vite warns about the >500 kB chunk)
 ```
 
 `npm run test:live` against the hosted Supabase project (2026-10-12), as two real reviewer accounts using the publishable key:
