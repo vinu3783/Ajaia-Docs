@@ -31,3 +31,6 @@ pgdata/
 .vscode/*
 !.vscode/extensions.json
 .idea/
+
+# Local copy of the submission form (may contain reviewer passwords)
+SUBMISSION_FORM.md
