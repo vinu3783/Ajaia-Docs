@@ -4,6 +4,7 @@ These are real screenshots of the deployed app (https://ajaia-docs-olive-one.ver
 
 | File | Shows |
 | --- | --- |
+| `00-video-preview.png` | Video preview for the README: `02-owner-editor.png` with a play button added on top |
 | `01-sign-in.png` | Sign-in screen (the password is masked) |
 | `02-owner-editor.png` | The owner's view: A4 page, toolbar with headings, B/I/U, lists and font size, "Saved" status, File menu and Share |
 | `03-share-dialog.png` | Share dialog: add people by email as Viewer or Editor, change access, or remove access |

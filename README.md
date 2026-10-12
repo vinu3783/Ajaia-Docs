@@ -1,33 +1,74 @@
+<div align="center">
+
+<img src="public/favicon.svg" width="72" alt="Ajaia Docs logo" />
+
 # Ajaia Docs
 
-A lightweight document editor inspired by Google Docs. You can create, format, rename and autosave documents, import `.txt` and `.md` files, and share documents with other registered users as **viewers** or **editors**. Access control is enforced in PostgreSQL with Row Level Security (RLS), not in the UI.
+**A lightweight, Google Docs–style document editor with autosave, A4 pages, file import and secure sharing.**
 
-> This is not real-time collaboration. Each save is persisted, and shared users see the latest saved version when they open or reopen a document. If two people edit the same document at the same time, the last write wins (see [ARCHITECTURE.md](ARCHITECTURE.md)).
+[![Live demo](https://img.shields.io/badge/Live_demo-Open_app-2563eb?style=for-the-badge&logo=vercel&logoColor=white)](https://ajaia-docs-olive-one.vercel.app/)
+[![Walkthrough video](https://img.shields.io/badge/Video-Watch_walkthrough-625df5?style=for-the-badge&logo=loom&logoColor=white)](https://www.loom.com/share/5ea3aab7624e4789a206aebd67406f8e)
 
-## Features
+![React](https://img.shields.io/badge/React_19-20232a?logo=react&logoColor=61dafb)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178c6?logo=typescript&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite_8-646cff?logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_4-06b6d4?logo=tailwindcss&logoColor=white)
+![Tiptap](https://img.shields.io/badge/Tiptap_3-0d0d0d?logo=tiptap&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-Postgres_·_Auth_·_RLS-3ecf8e?logo=supabase&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-70_passing-22c55e)
 
-- Email/password sign-up, sign-in and sign-out (Supabase Auth). The session is restored on reload.
-- **My Documents** and **Shared with Me** lists, with search by title or owner email.
-- Create, rename, edit and delete documents. Delete is owner-only and asks for confirmation.
-- A rich-text editor (Tiptap) with bold, italic, underline, H1, H2, normal text, bulleted and numbered lists, font size, and undo/redo. Keyboard shortcuts work, and toolbar buttons show the active formatting.
-- Debounced autosave with a status indicator: *Unsaved changes → Saving… → Saved*, or *Not saved* with a Retry button. "Saved" is shown only after the database confirms the write.
-- Import `.txt`, `.md` and `.markdown` files up to 1 MB. Markdown headings, lists, bold, italic, code, quotes and rules are converted into editor formatting. Other file types, empty files, binary files and oversized files are rejected with a clear message.
-- Sharing by email with Viewer (read) or Editor (read and edit) access. The owner can change or remove access.
-- **A4 pages with gaps, like Google Docs.** On desktop, documents are laid out on separate A4 sheets (794 × 1123 px, 1-inch margins) with a grey gap between them. Any paragraph, heading or list item that would cross the bottom of a page moves to the top of the next page. Printing breaks at exactly the same places.
-- **Font size** control (`–  11  +`, or type a size) in points, 6–96 pt. The defaults are 11 pt for body text and 20/16/14 pt for H1/H2/H3, as in Google Docs.
-- **File menu.** Download as Markdown (`.md`), plain text (`.txt`) or HTML (`.html`); **Print / Save as PDF**, which uses real A4 pages; and **Make a copy** (the "Save as" action), which creates a copy that you own. Viewers can also download, print and copy.
-- The open document is kept in the URL (`?doc=<id>`), so a refresh reopens it.
-- Responsive layout: on small screens the sidebar becomes a drawer.
+</div>
 
-## Screenshots
+---
 
-| Owner editing | Share dialog |
+## 🎬 Walkthrough
+
+<div align="center">
+
+[![Watch the 4-minute walkthrough](screenshots/00-video-preview.png)](https://www.loom.com/share/5ea3aab7624e4789a206aebd67406f8e)
+
+*Click to watch the walkthrough on Loom: creating and formatting a document, import, sharing as viewer/editor, and how access is enforced in the database.*
+
+</div>
+
+## 📸 Screenshots
+
+<table>
+  <tr>
+    <td width="50%"><img src="screenshots/02-owner-editor.png" alt="Owner editing a document" /><br /><sub><b>Editor</b>: A4 page, formatting toolbar, font size, live “Saved” status</sub></td>
+    <td width="50%"><img src="screenshots/03-share-dialog.png" alt="Share dialog" /><br /><sub><b>Sharing</b>: invite by email as Viewer or Editor, change or remove access</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="screenshots/04-recipient-editor-access.png" alt="Recipient with edit access" /><br /><sub><b>Shared with Me</b>: the recipient can edit, but cannot share or delete</sub></td>
+    <td width="50%"><img src="screenshots/05-recipient-view-only.png" alt="View-only document" /><br /><sub><b>View only</b>: no toolbar, read-only, enforced by the database</sub></td>
+  </tr>
+</table>
+
+## ✨ Features
+
+| | |
 | --- | --- |
-| ![Owner editing a document](screenshots/02-owner-editor.png) | ![Share dialog](screenshots/03-share-dialog.png) |
-| **Recipient with edit access** | **Recipient with view-only access** |
-| ![Recipient with edit access](screenshots/04-recipient-editor-access.png) | ![View-only document](screenshots/05-recipient-view-only.png) |
+| 📝 **Rich-text editing** | Bold, italic, underline, H1/H2, bulleted and numbered lists, **font size** (pt) and undo/redo. Keyboard shortcuts work, and toolbar buttons show the active formatting. |
+| 📄 **A4 pages** | Separate A4 sheets with a gap between them, like Google Docs. Blocks that would cross a page move to the next one, and **printing breaks at the same places**. |
+| 💾 **Truthful autosave** | *Unsaved changes → Saving… → Saved*, shown only after the database confirms the write. Failed saves keep your edits and offer **Retry**. |
+| 📥 **Import** | `.txt` and `.md` files up to 1 MB. Markdown headings, lists and inline formatting become real formatting. Unsupported files are rejected clearly. |
+| 📤 **File menu** | Download as Markdown, plain text or HTML; **Print / Save as PDF** on A4; **Make a copy** (Save as). |
+| 🤝 **Sharing** | Share by email as **Viewer** or **Editor**. The owner can change or remove access, and duplicate shares are prevented. |
+| 🔒 **Real security** | Permissions are enforced in **PostgreSQL Row Level Security** and column grants, not by hiding buttons. No one can take ownership or open a document that wasn't shared with them. |
+| 🔐 **Accounts** | Email/password sign-up and sign-in (Supabase Auth). The session is restored on reload. |
+| 📱 **Responsive** | On phones, the sidebar becomes a drawer. |
 
-**Live app:** https://ajaia-docs-olive-one.vercel.app/ · **Walkthrough video:** https://www.loom.com/share/5ea3aab7624e4789a206aebd67406f8e
+> **Scope note:** this is persistent sharing, not real-time co-editing. If two people edit at the same time, the last save wins. See [ARCHITECTURE.md](ARCHITECTURE.md).
+
+## 🔗 Links
+
+| | |
+| --- | --- |
+| 🌐 Live app | https://ajaia-docs-olive-one.vercel.app/ |
+| 🎬 Walkthrough video | https://www.loom.com/share/5ea3aab7624e4789a206aebd67406f8e |
+| 🏗️ Architecture and security model | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| 🤖 How AI was used and verified | [AI_WORKFLOW.md](AI_WORKFLOW.md) |
+| ✅ Feature status and test results | [SUBMISSION.md](SUBMISSION.md) |
 
 ## Tech stack
 
