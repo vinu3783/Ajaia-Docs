@@ -1,0 +1,33 @@
+# Dependencies & build output
+node_modules/
+dist/
+dist-ssr/
+coverage/
+*.tsbuildinfo
+
+# Environment & secrets — never commit real values
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local tooling
+.vercel/
+.supabase/
+supabase/.temp/
+*.local
+*.log
+npm-debug.log*
+
+# Local databases
+*.db
+*.sqlite
+pgdata/
+
+# Editor / OS
+.DS_Store
+._*
+.vscode/*
+!.vscode/extensions.json
+.idea/
