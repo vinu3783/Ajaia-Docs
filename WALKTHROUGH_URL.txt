@@ -1,0 +1,2 @@
+PLACEHOLDER — walkthrough video not recorded yet.
+Replace this line with the real video URL after recording (see WALKTHROUGH_SCRIPT.md).
