@@ -62,3 +62,6 @@
 - **Tests:** `npm test` includes RLS tests that run the real migration on PostgreSQL (PGlite), plus autosave, import, serialization and component tests. `npm run test:live` checks the hosted project.
 - **AI usage:** built with Claude Code. Mention the RLS mutation testing and the zero-rows-updated "false Saved" case (see AI_WORKFLOW.md).
 - **Trade-offs and next steps:** last write wins; next would be optimistic concurrency, Playwright E2E, and invitation-based sharing.
+
+---
+Live app: https://ajaia-docs-olive-one.vercel.app/ · Source: https://github.com/vinu3783/Ajaia-Docs

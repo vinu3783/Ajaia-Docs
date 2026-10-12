@@ -3,8 +3,8 @@
 | | |
 | --- | --- |
 | **Project** | Ajaia Docs, a lightweight document editor with sharing |
-| **Live URL** | _Not deployed yet._ Needs a Supabase project and a Vercel account (see "Deployment status"). |
-| **Source repository** | _Not published yet._ Local git repository only, no remote configured. |
+| **Live URL** | https://ajaia-docs-olive-one.vercel.app/ (Vercel; backend is a hosted Supabase project) |
+| **Source repository** | https://github.com/vinu3783/Ajaia-Docs |
 | **Walkthrough video** | _Not recorded yet._ See `WALKTHROUGH_URL.txt` and `WALKTHROUGH_SCRIPT.md`. |
 
 ## Inventory
@@ -25,7 +25,7 @@
 
 ## Feature checklist
 
-"Verified" below means verified by automated tests and a successful build. The database rules were also verified against the hosted Supabase project with `npm run test:live`. A manual browser pass has **not** been done yet.
+"Verified" below means verified by automated tests and a successful build. The database rules were also verified against the hosted Supabase project with `npm run test:live`. The deployed site was also checked end-to-end in real Chrome with two separate user sessions (see "Deployment status").
 
 | Feature | Status | Evidence |
 | --- | --- | --- |
@@ -51,7 +51,7 @@
 | Make a copy ("Save as") | Implemented | Component test; headless Chrome against live Supabase (copy opened with full content) |
 | Line-level pagination (splitting a paragraph across pages) | Not implemented | Paragraphs move to the next page whole |
 | Real-time collaboration | Not implemented | Out of scope; last write wins |
-| Deployment | Not done | Blocked on external accounts |
+| Deployment | Done | Vercel (frontend) + Supabase (Auth, Postgres, RLS); verified end-to-end on the live URL |
 
 ## Test results (actual)
 
@@ -100,11 +100,26 @@ The RLS tests were mutation-checked. Three deliberate weakenings of the migratio
 
 ## Deployment status
 
-Not deployed. The remaining manual steps are listed in README → "Supabase setup" and "Deployment (Vercel)". After deploying:
+**Deployed:** https://ajaia-docs-olive-one.vercel.app/, built by Vercel from `main` of https://github.com/vinu3783/Ajaia-Docs.
 
-1. Run `npm run test:live` against the project.
-2. Walk through the main flows in a fresh browser session.
-3. Fill in the live URL above.
+The only environment variables set in Vercel are `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, the publishable key. The deployed JavaScript bundle was checked: it contains the project URL and the publishable key, and no secret or service-role key.
+
+**Live end-to-end check (2026-10-12).** Headless Chrome ran two *isolated* browser sessions against the deployed URL: the owner account and the recipient account. The script created its own test documents and deleted them afterwards.
+
+```
+PASS  owner signs in on the live site
+PASS  document, title and formatting persist after reload
+PASS  owner shares as viewer; duplicate share is refused
+PASS  recipient sees the document under "Shared with Me"
+PASS  viewer: read-only, no toolbar/share/delete
+PASS  recipient cannot open an unshared document by URL
+PASS  editor: can edit and autosave, still no share/delete
+PASS  owner sees the editor's change after reopening
+PASS  Markdown upload creates a formatted document
+console errors: none — ALL LIVE CHECKS PASSED
+```
+
+`npm run test:live` checks the same database rules directly through the Data API (10/10, see above). Not yet done by a person: a manual walkthrough on a phone, and the walkthrough recording.
 
 ## Reviewer accounts
 

@@ -67,6 +67,18 @@ Every item below happened during this session.
     - The first screenshot after the visual fix still looked wrong. The cause was **not** the code: the Vite dev server was serving a stale copy of `paginationExtension.ts`. That file had been created after the server started, and on this exFAT drive the file watcher did not pick up its later edits. This was confirmed by fetching the module from the dev server and comparing it with the file on disk. Restarting the server fixed it.
     - The script's own title edits had failed twice, because headless Chrome on macOS ignores ⌘A. The script now selects the field's text directly, and the title came out correctly.
 
+11. **Publishing and deployment.**
+    - Before pushing, the AI noticed that every commit was authored with the machine's global Git identity, which belonged to a different account. The user chose to use their own identity. The six unpublished commits were re-authored with a repo-local identity, and the tree hash was confirmed identical before and after (`642622f…`), so only authorship changed. The global Git config was left untouched.
+    - The full history was scanned for keys, passwords, the Supabase project ref and personal emails before anything was published. `.env.local` was confirmed absent from the public repo (raw URL returns 404).
+    - The user pasted a GitHub token into the chat. It was used once, in memory only (never written to Git config, the Keychain or a file). The push was rejected (403) because the token lacked write access. The AI confirmed nothing had been stored, asked the user to revoke the exposed token, and the user then pushed from their own terminal.
+    - The deployed bundle was inspected. One `sb_secret_` match turned out to be supabase-js's own prefix check, not a key.
+    - **A two-session live E2E script found three bugs, all in the test script itself:**
+      - Its "new document" helper accepted the *previous* editor as ready and typed into the wrong document. This left a stray test document, which was then deleted by its exact id.
+      - It clicked Share while the button was briefly disabled.
+      - It queried the sidebar before it had loaded.
+
+      Each was diagnosed from screenshots and database state rather than by loosening assertions. The final run passed 9/9.
+
 ## How correctness was checked
 
 - `npm test` runs all automated tests (see SUBMISSION.md for the latest run). These include 15 RLS tests on real Postgres (PGlite), 5 autosave race tests with fake timers, import validation and conversion tests, rich-text round-trips through a real headless Tiptap editor, and React component tests.
