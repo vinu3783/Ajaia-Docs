@@ -5,7 +5,7 @@
 | **Project** | Ajaia Docs, a lightweight document editor with sharing |
 | **Live URL** | https://ajaia-docs-olive-one.vercel.app/ (Vercel; backend is a hosted Supabase project) |
 | **Source repository** | https://github.com/vinu3783/Ajaia-Docs |
-| **Walkthrough video** | _Not recorded yet._ See `WALKTHROUGH_URL.txt` and `WALKTHROUGH_SCRIPT.md`. |
+| **Walkthrough video** | https://www.loom.com/share/5ea3aab7624e4789a206aebd67406f8e (Loom; also in `WALKTHROUGH_URL.txt`) |
 
 ## Inventory
 
@@ -19,7 +19,7 @@
 | `ARCHITECTURE.md` | Architecture, schema, security model, autosave, import and trade-offs |
 | `AI_WORKFLOW.md` | How AI was used and verified |
 | `WALKTHROUGH_SCRIPT.md` | Recording outline |
-| `WALKTHROUGH_URL.txt` | Video link (placeholder for now) |
+| `WALKTHROUGH_URL.txt` | Walkthrough video link |
 | `screenshots/` | Real screenshots only (to be captured from the running app) |
 | `.env.example` | Environment variable names only |
 
@@ -119,7 +119,7 @@ PASS  Markdown upload creates a formatted document
 console errors: none — ALL LIVE CHECKS PASSED
 ```
 
-`npm run test:live` checks the same database rules directly through the Data API (10/10, see above). Not yet done by a person: a manual walkthrough on a phone, and the walkthrough recording.
+`npm run test:live` checks the same database rules directly through the Data API (10/10, see above). Not yet done by a person: a manual walkthrough on a phone. The walkthrough video was recorded on the deployed app by the author.
 
 ## Reviewer accounts
 

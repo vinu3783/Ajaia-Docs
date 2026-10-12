@@ -1,2 +1,1 @@
-PLACEHOLDER — walkthrough video not recorded yet.
-Replace this line with the real video URL after recording (see WALKTHROUGH_SCRIPT.md).
+https://www.loom.com/share/5ea3aab7624e4789a206aebd67406f8e
