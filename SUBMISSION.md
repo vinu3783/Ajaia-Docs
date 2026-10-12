@@ -25,11 +25,11 @@
 
 ## Feature checklist
 
-"Verified" below means verified by automated tests and a successful build. A manual browser pass against a live Supabase project has **not** been done yet.
+"Verified" below means verified by automated tests and a successful build. The database rules were also verified against the hosted Supabase project with `npm run test:live`. A manual browser pass has **not** been done yet.
 
 | Feature | Status | Evidence |
 | --- | --- | --- |
-| Sign-up / sign-in / sign-out / session restore | Implemented | Built and type-checked. Not yet exercised against live Supabase. |
+| Sign-up / sign-in / sign-out / session restore | Implemented | Password sign-in verified against live Supabase (`test:live`). The browser UI flow is not yet manually verified. |
 | Create document | Implemented | Component test; PGlite RLS test |
 | Rename / edit title (1–200 chars, blank rejected) | Implemented | Component test; DB constraint test |
 | Rich text: bold, italic, underline, H1, H2, paragraph, bulleted and numbered lists, undo/redo | Implemented | Serialization and toolbar tests |
@@ -40,7 +40,7 @@
 | Delete (owner only, with confirmation) | Implemented | RLS tests (non-owners cannot delete). The UI confirm dialog is not covered by an automated test. |
 | `.txt` / `.md` import with validation | Implemented | 14 import tests |
 | Markdown formatting on import | Partial (subset) | Headings, lists, inline marks, quotes, code and rules. Nested lists are flattened. |
-| Share by email as viewer or editor; change or remove access | Implemented | 15 RLS tests on Postgres |
+| Share by email as viewer or editor; change or remove access | Implemented | 15 RLS tests on Postgres; live checks on hosted Supabase |
 | Viewer read-only / editor can edit / only owner shares or deletes | Implemented | RLS tests plus component tests |
 | Ownership cannot be changed by the client | Implemented | Column grants plus trigger, both tested |
 | Responsive layout with mobile drawer | Implemented | Not visually verified in a browser yet |
@@ -70,7 +70,23 @@ $ npm run typecheck   → no errors
 $ npm run build       → success (JS 580 kB / 184 kB gzip; Vite warns about the >500 kB chunk)
 ```
 
-`npm run test:live` (hosted Supabase): **not run yet.** It needs a project and two accounts.
+`npm run test:live` against the hosted Supabase project (2026-10-12), as two real reviewer accounts using the publishable key:
+
+```
+  PASS  A creates a document; owner_id is set by the database
+  PASS  formatted content round-trips exactly
+  PASS  client cannot supply owner_id on insert
+  PASS  B cannot read, edit or delete A's private document
+  PASS  B cannot share A's document
+  PASS  A shares with B as viewer; B sees it under shared documents
+  PASS  duplicate share is rejected
+  PASS  viewer B cannot edit or self-promote
+  PASS  after upgrade to editor, B can edit but not delete or take ownership
+  PASS  anonymous requests cannot read documents
+All live checks passed.
+```
+
+The first run failed the round-trip check. This was a test bug: `jsonb` reorders object keys, and the check compared JSON strings. Deep equality was `true`. The check was fixed to compare structurally and re-run (see AI_WORKFLOW.md).
 
 The RLS tests were mutation-checked. Three deliberate weakenings of the migration each caused failures (details in AI_WORKFLOW.md).
 

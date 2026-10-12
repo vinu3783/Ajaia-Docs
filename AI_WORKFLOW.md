@@ -43,6 +43,8 @@ Every item below happened during this session.
    - The Markdown importer builds Tiptap JSON directly instead of converting Markdown to HTML and parsing it. A test confirms that `<img src=x onerror=...>` in an uploaded file stays literal text.
 6. **A correction to the documentation.** An early README draft said other users see changes "after refocusing the window". That was inaccurate: focus refreshes only the document lists. The sentence was corrected.
 
+7. **The live check against hosted Supabase found a bug in a test.** The first `npm run test:live` run passed 9 of 10 checks. The formatted-content round-trip failed. Before changing anything, a one-off probe compared the sent and received JSON. Postgres `jsonb` had returned the keys in a different order (`{"text","type",...}` instead of `{"type","text",...}`), but `isDeepStrictEqual` was `true`. No data was lost. The check had compared `JSON.stringify` output, which depends on key order. It now compares structurally, and the re-run passed 10/10. The PGlite test had used deep equality from the start, which is why it never showed the problem.
+
 ## How correctness was checked
 
 - `npm test` runs 54 tests in 8 files (see SUBMISSION.md for the latest run). These include 15 RLS tests on real Postgres (PGlite), 5 autosave race tests with fake timers, import validation and conversion tests, rich-text round-trips through a real headless Tiptap editor, and React component tests.
@@ -52,5 +54,5 @@ Every item below happened during this session.
 
 ## Remaining uncertainty
 
-- The PGlite tests use an emulated `auth` schema and emulated default grants. They give strong evidence that the SQL is correct, but they are not the hosted Supabase stack. `npm run test:live` exists to check the real project. Its status is recorded in SUBMISSION.md.
+- The PGlite tests use an emulated `auth` schema and emulated default grants. The same rules were then confirmed on the hosted Supabase project with `npm run test:live` (10/10 checks passed).
 - The UI has been verified through component tests and a build. A full manual pass in a real browser against the deployed app is still needed. SUBMISSION.md records whether it has been done.

@@ -13,6 +13,7 @@
  * Run: npm run test:live
  */
 import { createClient } from '@supabase/supabase-js'
+import { isDeepStrictEqual } from 'node:util'
 
 const env = process.env
 const required = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY', 'SMOKE_A_EMAIL', 'SMOKE_A_PASSWORD', 'SMOKE_B_EMAIL', 'SMOKE_B_PASSWORD']
@@ -76,7 +77,8 @@ try {
   await check('formatted content round-trips exactly', async () => {
     const { data, error } = await a.client.from('documents').select('content').eq('id', sharedId).single()
     if (error) throw error
-    assert(JSON.stringify(data.content) === JSON.stringify(content), 'content differs after reload')
+    // jsonb normalizes object key order, so compare structurally, not as strings.
+    assert(isDeepStrictEqual(data.content, content), 'content differs after reload')
   })
 
   await check('client cannot supply owner_id on insert', async () => {
