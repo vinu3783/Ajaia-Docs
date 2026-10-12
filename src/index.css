@@ -1,0 +1,80 @@
+@import 'tailwindcss';
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
+@layer components {
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger,
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700;
+  }
+  .btn-secondary {
+    @apply border border-slate-300 bg-white text-slate-800 hover:bg-slate-50;
+  }
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700;
+  }
+  .btn-ghost {
+    @apply text-slate-700 hover:bg-slate-100;
+  }
+  .input {
+    @apply block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none;
+  }
+}
+
+/* Document typography (ProseMirror output). */
+.doc-content {
+  @apply min-h-[50vh] text-[15px] leading-7 text-slate-800 outline-none;
+  overflow-wrap: anywhere;
+}
+.doc-content > * + * {
+  @apply mt-3;
+}
+.doc-content h1 {
+  @apply mt-6 text-3xl font-bold leading-tight text-slate-900 first:mt-0;
+}
+.doc-content h2 {
+  @apply mt-5 text-2xl font-semibold leading-snug text-slate-900 first:mt-0;
+}
+.doc-content h3 {
+  @apply mt-4 text-xl font-semibold text-slate-900 first:mt-0;
+}
+.doc-content ul {
+  @apply list-disc pl-6;
+}
+.doc-content ol {
+  @apply list-decimal pl-6;
+}
+.doc-content li > p {
+  @apply my-0.5;
+}
+.doc-content blockquote {
+  @apply border-l-4 border-slate-200 pl-4 text-slate-600;
+}
+.doc-content code {
+  @apply rounded bg-slate-100 px-1 py-0.5 font-mono text-[13px];
+}
+.doc-content pre {
+  @apply overflow-x-auto rounded-md bg-slate-900 p-4 text-slate-100;
+}
+.doc-content pre code {
+  @apply bg-transparent p-0 text-inherit;
+}
+.doc-content hr {
+  @apply my-6 border-slate-200;
+}
+.doc-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  @apply pointer-events-none float-left h-0 text-slate-400;
+}
