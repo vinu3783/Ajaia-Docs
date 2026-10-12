@@ -21,9 +21,10 @@ const doc = (over: Partial<DocumentRecord> = {}): DocumentRecord => ({
 })
 
 function renderEditor(d: DocumentRecord) {
-  return render(<DocumentEditor client={client} doc={d} onChanged={vi.fn()} onDeleted={vi.fn()} />)
+  return render(<DocumentEditor client={client} doc={d} onChanged={vi.fn()} onDeleted={vi.fn()} onCopied={onCopied} />)
 }
 
+const onCopied = vi.fn()
 beforeEach(() => vi.resetAllMocks())
 
 describe('DocumentEditor', () => {
@@ -91,5 +92,41 @@ describe('DocumentEditor', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Heading 1' }))
     expect(screen.getByRole('button', { name: 'Heading 1' })).toHaveAttribute('aria-pressed', 'true')
     expect(screen.getByRole('button', { name: 'Normal text' })).toHaveAttribute('aria-pressed', 'false')
+  })
+
+  it('File menu: "Make a copy" saves the current content as a new document the user owns', async () => {
+    const copy = { id: 'd2', title: 'Copy of Spec', ownerId: 'u2', updatedAt: 't', role: 'owner' as const }
+    mocked.createDocument.mockResolvedValue(copy)
+    renderEditor(doc({ role: 'viewer', ownerId: 'u1' })) // viewers can copy too
+    await userEvent.click(screen.getByRole('button', { name: 'File' }))
+    await userEvent.click(screen.getByRole('menuitem', { name: /make a copy/i }))
+    expect(mocked.createDocument).toHaveBeenCalledWith(client, {
+      title: 'Copy of Spec',
+      content: expect.objectContaining({ type: 'doc' }),
+    })
+    expect(onCopied).toHaveBeenCalledWith(copy)
+  })
+
+  it('File menu: print and Markdown download', async () => {
+    const print = vi.spyOn(window, 'print').mockImplementation(() => {})
+    const blobs: Blob[] = []
+    URL.createObjectURL = vi.fn((b: Blob) => (blobs.push(b), 'blob:x'))
+    URL.revokeObjectURL = vi.fn()
+    const clicked: string[] = []
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      clicked.push(this.download)
+    })
+
+    renderEditor(doc())
+    await userEvent.click(screen.getByRole('button', { name: 'File' }))
+    await userEvent.click(screen.getByRole('menuitem', { name: /print/i }))
+    expect(print).toHaveBeenCalled()
+
+    await userEvent.click(screen.getByRole('button', { name: 'File' }))
+    await userEvent.click(screen.getByRole('menuitem', { name: /markdown/i }))
+    expect(clicked).toEqual(['Spec.md'])
+    expect(await blobs[0].text()).toBe('Hello world\n')
+    print.mockRestore()
+    click.mockRestore()
   })
 })

@@ -12,6 +12,7 @@ interface DocumentViewProps {
   userId: string
   onChanged: (id: string, changes: Partial<DocumentSummary>) => void
   onDeleted: (id: string) => void
+  onCopied: (doc: DocumentSummary) => void
 }
 
 type LoadState =
@@ -24,7 +25,7 @@ type LoadState =
  * Loads a single document. Rendered with key={documentId}, so switching
  * documents remounts everything below (editor, autosave) with fresh state.
  */
-export function DocumentView({ client, documentId, userId, onChanged, onDeleted }: DocumentViewProps) {
+export function DocumentView({ client, documentId, userId, onChanged, onDeleted, onCopied }: DocumentViewProps) {
   const [state, setState] = useState<LoadState>({ kind: 'loading' })
   const [attempt, setAttempt] = useState(0)
 
@@ -70,7 +71,7 @@ export function DocumentView({ client, documentId, userId, onChanged, onDeleted 
       </EmptyState>
     )
   }
-  return <DocumentEditor client={client} doc={state.doc} onChanged={onChanged} onDeleted={onDeleted} />
+  return <DocumentEditor client={client} doc={state.doc} onChanged={onChanged} onDeleted={onDeleted} onCopied={onCopied} />
 }
 
 export function EmptyState({ title, body, children }: { title: string; body: string; children?: React.ReactNode }) {

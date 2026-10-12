@@ -109,6 +109,14 @@ export function Workspace({ client, user }: { client: SupabaseClient; user: User
     setShared(apply)
   }, [])
 
+  const handleCopied = useCallback(
+    (doc: DocumentSummary) => {
+      setOwned((docs) => [doc, ...docs])
+      select(doc.id)
+    },
+    [select],
+  )
+
   const handleDeleted = useCallback(
     (id: string) => {
       setOwned((docs) => docs.filter((d) => d.id !== id))
@@ -128,14 +136,14 @@ export function Workspace({ client, user }: { client: SupabaseClient; user: User
   const hasAnyDocs = owned.length + shared.length > 0
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-white text-slate-900">
+    <div className="flex h-dvh overflow-hidden bg-white text-slate-900 print:block print:h-auto print:overflow-visible">
       {/* Sidebar: static on desktop, slide-over drawer on small screens. */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-30 bg-slate-900/30 md:hidden" aria-hidden="true" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0 z-30 bg-slate-900/30 md:hidden print:hidden" aria-hidden="true" onClick={() => setSidebarOpen(false)} />
       )}
       <aside
         id="sidebar"
-        className={`fixed inset-y-0 left-0 z-40 w-72 max-w-[85vw] border-r border-slate-200 bg-slate-50 transition-transform md:static md:z-auto md:translate-x-0 ${
+        className={`print:hidden fixed inset-y-0 left-0 z-40 w-72 max-w-[85vw] border-r border-slate-200 bg-slate-50 transition-transform md:static md:z-auto md:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -163,8 +171,8 @@ export function Workspace({ client, user }: { client: SupabaseClient; user: User
         />
       </aside>
 
-      <main className="flex min-w-0 flex-1 flex-col">
-        <div className="flex items-center gap-3 border-b border-slate-200 px-3 py-2 md:hidden">
+      <main className="flex min-w-0 flex-1 flex-col print:block">
+        <div className="flex items-center gap-3 border-b border-slate-200 px-3 py-2 md:hidden print:hidden">
           <button
             type="button"
             className="btn-ghost px-2"
@@ -188,6 +196,7 @@ export function Workspace({ client, user }: { client: SupabaseClient; user: User
             userId={user.id}
             onChanged={handleChanged}
             onDeleted={handleDeleted}
+            onCopied={handleCopied}
           />
         ) : (
           <EmptyState

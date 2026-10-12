@@ -7,9 +7,10 @@ import type { JSONContent } from '@tiptap/core'
  * nodes, so nothing in an uploaded file can become markup or script.
  *
  * Supported: ATX headings (#, ##, ###+ → H3), bullet lists (-, *, +), numbered
- * lists, blockquotes, fenced code blocks, horizontal rules, and inline
- * **bold**, *italic*, `code` and ~~strike~~. Nested lists are flattened;
- * links and images are kept as their literal Markdown text.
+ * lists, blockquotes, fenced code blocks, horizontal rules, inline **bold**,
+ * *italic*, `code`, ~~strike~~, <u>underline</u> (the only tag recognised, and
+ * only as a mark — never as HTML) and backslash escapes. Nested lists are
+ * flattened; links and images are kept as their literal Markdown text.
  */
 export function markdownToDoc(markdown: string): JSONContent {
   const lines = normalizeNewlines(markdown).split('\n')
@@ -122,15 +123,17 @@ function paragraphFromLines(lines: string[]): JSONContent {
   const content: JSONContent[] = []
   lines.forEach((line, idx) => {
     if (idx > 0) content.push({ type: 'hardBreak' })
-    content.push(...parseInline(line.trim()))
+    // A trailing backslash is a CommonMark hard break; the break is already implied here.
+    content.push(...parseInline(line.trim().replace(/\\$/, '')))
   })
   return content.length ? { type: 'paragraph', content } : { type: 'paragraph' }
 }
 
 type Mark = { type: string }
 
+// Groups: 1 escape, 2 <u>, 3 ***bold italic***, 4-5 **bold**/__bold__, 6 *italic*, 7 _italic_, 8 `code`, 9 ~~strike~~
 const INLINE_PATTERN =
-  /(\*\*|__)(?=\S)(.+?)(?<=\S)\1|(?<![\w*])\*(?=[^\s*])(.+?)(?<=[^\s*])\*(?!\*)|(?<![\w_])_(?=[^\s_])(.+?)(?<=[^\s_])_(?![\w_])|`([^`]+)`|~~(?=\S)(.+?)(?<=\S)~~/
+  /\\([\\`*_~[\]#>+\-.)!<])|<u>(?=\S)(.+?)<\/u>|\*\*\*(?=[^\s*])(.+?)(?<=[^\s*])\*\*\*|(\*\*|__)(?=\S)(.+?)(?<=\S)\4|(?<![\w*])\*(?=[^\s*])(.+?)(?<=[^\s*])\*(?!\*)|(?<![\w_])_(?=[^\s_])(.+?)(?<=[^\s_])_(?![\w_])|`([^`]+)`|~~(?=\S)(.+?)(?<=\S)~~/
 
 export function parseInline(text: string, marks: Mark[] = []): JSONContent[] {
   const out: JSONContent[] = []
@@ -142,11 +145,14 @@ export function parseInline(text: string, marks: Mark[] = []): JSONContent[] {
       break
     }
     if (m.index > 0) out.push(textWithMarks(rest.slice(0, m.index), marks))
-    if (m[2] !== undefined) out.push(...parseInline(m[2], [...marks, { type: 'bold' }]))
-    else if (m[3] !== undefined) out.push(...parseInline(m[3], [...marks, { type: 'italic' }]))
-    else if (m[4] !== undefined) out.push(...parseInline(m[4], [...marks, { type: 'italic' }]))
-    else if (m[5] !== undefined) out.push(textWithMarks(m[5], [...marks, { type: 'code' }]))
-    else if (m[6] !== undefined) out.push(...parseInline(m[6], [...marks, { type: 'strike' }]))
+    if (m[1] !== undefined) out.push(textWithMarks(m[1], marks))
+    else if (m[2] !== undefined) out.push(...parseInline(m[2], [...marks, { type: 'underline' }]))
+    else if (m[3] !== undefined) out.push(...parseInline(m[3], [...marks, { type: 'bold' }, { type: 'italic' }]))
+    else if (m[5] !== undefined) out.push(...parseInline(m[5], [...marks, { type: 'bold' }]))
+    else if (m[6] !== undefined) out.push(...parseInline(m[6], [...marks, { type: 'italic' }]))
+    else if (m[7] !== undefined) out.push(...parseInline(m[7], [...marks, { type: 'italic' }]))
+    else if (m[8] !== undefined) out.push(textWithMarks(m[8], [...marks, { type: 'code' }]))
+    else if (m[9] !== undefined) out.push(...parseInline(m[9], [...marks, { type: 'strike' }]))
     rest = rest.slice(m.index + m[0].length)
   }
   return out

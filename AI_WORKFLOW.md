@@ -45,9 +45,23 @@ Every item below happened during this session.
 
 7. **The live check against hosted Supabase found a bug in a test.** The first `npm run test:live` run passed 9 of 10 checks. The formatted-content round-trip failed. Before changing anything, a one-off probe compared the sent and received JSON. Postgres `jsonb` had returned the keys in a different order (`{"text","type",...}` instead of `{"type","text",...}`), but `isDeepStrictEqual` was `true`. No data was lost. The check had compared `JSON.stringify` output, which depends on key order. It now compares structurally, and the re-run passed 10/10. The PGlite test had used deep equality from the start, which is why it never showed the problem.
 
+8. **Follow-up request: A4 pages, download, print and "save as".**
+   - Before building, the AI told the user that Google Docs-style pagination is not something Tiptap provides, and proposed A4 page markers plus real A4 printing instead.
+   - The new export-then-import round-trip test found a **real importer bug**: `***bold italic***` was imported as bold `*text` followed by a stray `*`. This would also have affected users' own Markdown files. The importer was fixed rather than working around it in the exporter.
+   - Adding two capture groups to the importer's inline pattern shifted the bold rule's back-reference (`\1` → `\3`, and later `\4`). This was caught by re-reading the change before running the tests.
+   - The first exporter draft escaped numbered lines as `\1.`, which is not valid Markdown escaping (it should be `1\.`), and indented nested lists twice. Both were caught by reviewing the code and fixed before testing.
+   - **Real-browser check.** Headless Chrome (puppeteer-core, run from a scratch directory and not added as a project dependency) signed in to the live Supabase project, wrote a document longer than one page, opened the File menu, printed to PDF and made a copy.
+     - It confirmed the A4 sheet width, the A4 PDF paper size, that the copy contained all the content, that content persisted after a reload, that there was no horizontal overflow at 390 px, and that there were no console errors.
+     - It also showed a **mismatch**: 3 pages on screen but 4 printed. Inspecting the PDF text page by page with PDFKit showed that print fits 13 paragraphs per page, because it avoids splitting short paragraphs. Rather than claim exact pagination, the markers are now documented and labelled as approximate.
+     - The script's own title edit failed (triple-click didn't select the title), which produced the title "Untitled documentBrowser check…". This was a script problem, not an app bug, and the test documents were deleted through the app's own delete flow.
+
+9. **A wrong bundle-size figure in the docs.** After the File menu was added, the build appeared to grow from 184 kB to 263 kB gzipped. Before attributing that to the new code, the AI built the previous commit in a separate git worktree and listed the bundle's modules from the sourcemap. It then rebuilt the current code with the Supabase environment variables blanked.
+   - The cause: the earlier builds had run before `.env.local` existed. `isSupabaseConfigured` was therefore a constant `false`, and the bundler dropped supabase-js as dead code.
+   - The new features added almost nothing (580.28 kB in both builds without Supabase settings). The earlier "184 kB" figure did not represent a real deployment, and it was corrected to 263 kB gzipped everywhere it appeared.
+
 ## How correctness was checked
 
-- `npm test` runs 54 tests in 8 files (see SUBMISSION.md for the latest run). These include 15 RLS tests on real Postgres (PGlite), 5 autosave race tests with fake timers, import validation and conversion tests, rich-text round-trips through a real headless Tiptap editor, and React component tests.
+- `npm test` runs all automated tests (see SUBMISSION.md for the latest run). These include 15 RLS tests on real Postgres (PGlite), 5 autosave race tests with fake timers, import validation and conversion tests, rich-text round-trips through a real headless Tiptap editor, and React component tests.
 - `npm run typecheck`, `npm run lint` and `npm run build` were run after each major change.
 - The dev server was started and checked with HTTP requests. No browser automation was available in this environment.
 - Mocked tests are labelled as such in the code. They are not presented as proof of database security; the PGlite and live tests serve that role.

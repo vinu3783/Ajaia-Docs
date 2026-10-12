@@ -80,6 +80,14 @@ The flow is: `<input accept=".txt,.md,...">` → `validateImportFile` → `TextD
 
 `.txt` files become one paragraph per line, so blank lines are kept. `.md` files go through `markdownToDoc`, a small line-based converter that builds Tiptap JSON directly. It never creates or parses HTML, so `<script>` or `<img onerror>` in a file stays literal text. A test confirms this. The filename, without its extension, becomes the title.
 
+## Page layout, print and export
+
+- **A4 sheet.** `PagedSheet` renders the editor on a 794 px wide sheet, which is A4 at CSS 96 dpi, with 96 px (1 in) margins. A `ResizeObserver` watches the *content* height and computes `pageCountFor(h) = ceil((h + 2·96) / 1123)`. It then draws a dashed marker every 1123 px and sets the sheet's minimum height to a whole number of pages. The content is measured rather than the sheet, because the sheet's minimum height depends on the page count; measuring the sheet would stop the count from ever going back down.
+- **This is a guide, not pagination.** In real Chrome, 40 two-line paragraphs gave 3 pages on screen but printed as 4. The print engine avoids splitting short paragraphs across pages, which adds space at each break. True pagination would require laying content out across separate page boxes, for example with a paid Tiptap Pages extension or a custom layout engine.
+- **Print.** `@page { size: A4; margin: 25.4mm }`. Print-only utilities hide the sidebar, header and toolbar. They also remove the fixed-height, overflow-hidden app shell, so long documents continue onto further pages instead of being clipped. Verified by printing to PDF in headless Chrome: the paper size is 595 × 842 pt (A4) and all 40 paragraphs appear across the pages.
+- **Export.** This is entirely client-side. A Blob is downloaded through a temporary `<a download>` link. HTML export wraps `editor.getHTML()`, which can only contain node types from the schema, and escapes the title. Markdown export (`docToMarkdown`) is the inverse of the importer. It escapes text that would otherwise be read as Markdown syntax. A test checks that export followed by import gives back the same document.
+- **Make a copy** inserts a new document with the on-screen content, including edits that haven't been saved yet. Because it goes through the normal insert under RLS, the copy is always owned by the person copying, even if they were only a viewer of the original.
+
 ## Trade-offs
 
 - **No custom server.** RLS keeps the system small and puts authorization in one place. The cost is that business rules live in SQL, which is why the RLS tests run on real Postgres.

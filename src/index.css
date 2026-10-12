@@ -78,3 +78,46 @@
   content: attr(data-placeholder);
   @apply pointer-events-none float-left h-0 text-slate-400;
 }
+
+/* A4 sheet: on desktop it is at least as tall as the pages it spans. */
+@media (min-width: 640px) {
+  .paged-sheet {
+    min-height: var(--sheet-min-h, 1123px);
+  }
+}
+
+/* Print / Save as PDF: only the document, on real A4 pages. */
+@page {
+  size: A4;
+  margin: 25.4mm;
+}
+@media print {
+  html,
+  body,
+  #root {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  .paged-sheet {
+    max-width: none !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    --tw-ring-shadow: 0 0 #0000 !important;
+  }
+  .doc-content {
+    min-height: 0;
+  }
+  .doc-content h1,
+  .doc-content h2,
+  .doc-content h3 {
+    break-after: avoid;
+  }
+  .doc-content li,
+  .doc-content pre,
+  .doc-content blockquote {
+    break-inside: avoid;
+  }
+}

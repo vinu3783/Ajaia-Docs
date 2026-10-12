@@ -13,6 +13,8 @@ A lightweight document editor inspired by Google Docs. You can create, format, r
 - Debounced autosave with a status indicator: *Unsaved changes → Saving… → Saved*, or *Not saved* with a Retry button. "Saved" is shown only after the database confirms the write.
 - Import `.txt`, `.md` and `.markdown` files up to 1 MB. Markdown headings, lists, bold, italic, code, quotes and rules are converted into editor formatting. Other file types, empty files, binary files and oversized files are rejected with a clear message.
 - Sharing by email with Viewer (read) or Editor (read and edit) access. The owner can change or remove access.
+- **A4 page layout.** Documents are shown on an A4-width sheet with 1-inch margins, and dashed **Page 2, Page 3…** markers show approximately where each A4 page ends.
+- **File menu.** Download as Markdown (`.md`), plain text (`.txt`) or HTML (`.html`); **Print / Save as PDF**, which uses real A4 pages; and **Make a copy** (the "Save as" action), which creates a copy that you own. Viewers can also download, print and copy.
 - The open document is kept in the URL (`?doc=<id>`), so a refresh reopens it.
 - Responsive layout: on small screens the sidebar becomes a drawer.
 
@@ -109,7 +111,8 @@ src/
   features/
     auth/              AuthProvider (session restore), AuthScreen
     documents/         Data access (documentsApi), Workspace, Sidebar, DocumentView
-    editor/            Tiptap config, Toolbar, AutosaveController, DocumentEditor
+    editor/            Tiptap config, Toolbar, AutosaveController, DocumentEditor, A4 PagedSheet
+    export/            Markdown/text/HTML export, File menu
     import/            File validation and Markdown/plain text → Tiptap JSON
     sharing/           sharingApi, ShareDialog, permission → UI capabilities
   lib/                 Supabase client, error messages
@@ -127,6 +130,8 @@ scripts/live-smoke.mjs Integration checks against a real Supabase project
 - **Email enumeration.** The owner of any document can learn whether an email address is registered, because sharing with an unknown address returns an error. This is acceptable for a demo. Invitations would remove it.
 - **Markdown import is a subset.** Nested lists are flattened. Tables, links and images are kept as literal text. Headings deeper than H3 become H3. Only `.txt` and `.md` are supported; `.docx` and `.pdf` are not.
 - **Limited sharing actions for recipients.** A recipient cannot remove a document from their own "Shared with Me" list; only the owner can revoke access. There is no ownership transfer and no link sharing.
-- **No version history and no export.**
-- The JavaScript bundle is about 184 kB gzipped in a single chunk. The editor could be code-split.
+- **Page markers are a visual guide, not true pagination.** Text flows continuously on screen and the markers sit every 297 mm. When printing, the browser avoids splitting lines and very short paragraphs, so printed page breaks can land a few lines earlier than the on-screen markers. In one test, 40 paragraphs showed as 3 pages on screen and printed as 4 A4 pages. Google Docs-style re-flowing of text into separate page boxes was out of scope.
+- **Markdown export** writes underline as `<u>…</u>`, because Markdown has no underline syntax. The app's importer reads it back as underline. Nested lists are exported with indentation but flattened on re-import.
+- **No version history.**
+- The production JavaScript bundle is 875 kB (263 kB gzipped) in a single chunk, mostly react-dom, supabase-js and Tiptap/ProseMirror. Code-splitting the editor and auth screens would reduce the initial load.
 - Large documents (close to the 1 MB import limit) serialize the full document JSON on every autosave.

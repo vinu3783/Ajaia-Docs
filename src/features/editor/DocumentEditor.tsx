@@ -3,11 +3,14 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { EditorContent, useEditor } from '@tiptap/react'
 import { ConfirmDialog } from '../../components/ConfirmDialog'
 import { toUserMessage } from '../../lib/errors'
-import { TITLE_MAX_LENGTH, type DocumentPatch, type DocumentRecord, type DocumentSummary } from '../../types/documents'
-import { deleteDocument, updateDocument } from '../documents/documentsApi'
+import { DEFAULT_TITLE, TITLE_MAX_LENGTH, type DocumentPatch, type DocumentRecord, type DocumentSummary } from '../../types/documents'
+import { createDocument, deleteDocument, updateDocument } from '../documents/documentsApi'
+import { FileMenu } from '../export/FileMenu'
+import { docToMarkdown, downloadFile, safeFilename, toHtmlDocument } from '../export/exportDocument'
 import { ShareDialog } from '../sharing/ShareDialog'
 import { ROLE_LABELS, capabilitiesFor } from '../sharing/permissions'
 import { editorExtensions } from './extensions'
+import { PagedSheet } from './PagedSheet'
 import { SaveStatusIndicator } from './SaveStatusIndicator'
 import { Toolbar } from './Toolbar'
 import { useAutosave } from './useAutosave'
@@ -17,14 +20,18 @@ interface DocumentEditorProps {
   doc: DocumentRecord
   onChanged: (id: string, changes: Partial<DocumentSummary>) => void
   onDeleted: (id: string) => void
+  /** Called with the new document after "Make a copy" succeeds. */
+  onCopied: (doc: DocumentSummary) => void
 }
 
-export function DocumentEditor({ client, doc, onChanged, onDeleted }: DocumentEditorProps) {
+export function DocumentEditor({ client, doc, onChanged, onDeleted, onCopied }: DocumentEditorProps) {
   const caps = capabilitiesFor(doc.role)
   const [title, setTitle] = useState(doc.title)
   const [savedTitle, setSavedTitle] = useState(doc.title)
   const [contentError, setContentError] = useState(false)
   const [dialog, setDialog] = useState<'share' | 'delete' | null>(null)
+  const [fileError, setFileError] = useState<string | null>(null)
+  const [copying, setCopying] = useState(false)
   const canEdit = caps.canEdit && !contentError
 
   // Bound to this document's id for the lifetime of this component.
@@ -59,6 +66,37 @@ export function DocumentEditor({ client, doc, onChanged, onDeleted }: DocumentEd
     },
   })
 
+  // Exports use what's on screen (including edits still being autosaved).
+  const exportName = safeFilename(title.trim() || savedTitle)
+  function download(format: 'md' | 'txt' | 'html') {
+    if (!editor) return
+    setFileError(null)
+    try {
+      if (format === 'md') downloadFile(`${exportName}.md`, docToMarkdown(editor.getJSON()), 'text/markdown')
+      else if (format === 'txt') downloadFile(`${exportName}.txt`, `${editor.getText({ blockSeparator: '\n\n' })}\n`, 'text/plain')
+      else downloadFile(`${exportName}.html`, toHtmlDocument(title.trim() || savedTitle, editor.getHTML()), 'text/html')
+    } catch (err) {
+      setFileError(toUserMessage(err, 'Could not create the download.'))
+    }
+  }
+
+  async function makeCopy() {
+    if (!editor || copying) return
+    setCopying(true)
+    setFileError(null)
+    try {
+      const base = title.trim() || savedTitle || DEFAULT_TITLE
+      const copy = await createDocument(client, {
+        title: `Copy of ${base}`.slice(0, TITLE_MAX_LENGTH),
+        content: editor.getJSON(),
+      })
+      onCopied(copy)
+    } catch (err) {
+      setFileError(toUserMessage(err, 'Could not copy this document.'))
+      setCopying(false)
+    }
+  }
+
   const titleTrimmed = title.trim()
   const titleInvalid = titleTrimmed.length === 0
 
@@ -68,8 +106,8 @@ export function DocumentEditor({ client, doc, onChanged, onDeleted }: DocumentEd
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <header className="border-b border-slate-200 bg-white">
+    <div className="flex min-h-0 flex-1 flex-col print:block">
+      <header className="border-b border-slate-200 bg-white print:hidden">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 sm:px-6">
           <div className="min-w-0 flex-1 basis-56">
             <label htmlFor="doc-title" className="sr-only">
@@ -104,6 +142,15 @@ export function DocumentEditor({ client, doc, onChanged, onDeleted }: DocumentEd
                 {ROLE_LABELS[doc.role]} · shared by {doc.ownerEmail ?? 'another user'}
               </span>
             )}
+            <FileMenu
+              actions={[
+                { label: 'Download as Markdown', hint: '.md', onSelect: () => download('md') },
+                { label: 'Download as plain text', hint: '.txt', onSelect: () => download('txt') },
+                { label: 'Download as HTML', hint: '.html', onSelect: () => download('html') },
+                { label: 'Print / Save as PDF', hint: 'A4', onSelect: () => window.print(), separatorBefore: true },
+                { label: copying ? 'Making a copy…' : 'Make a copy', hint: 'Save as', onSelect: () => void makeCopy() },
+              ]}
+            />
             {caps.canShare && (
               <button type="button" className="btn-primary" onClick={() => setDialog('share')}>
                 Share
@@ -130,6 +177,11 @@ export function DocumentEditor({ client, doc, onChanged, onDeleted }: DocumentEd
             Your latest changes haven't been saved: {toUserMessage(autosave.error)} Keep this tab open and retry.
           </p>
         )}
+        {fileError && (
+          <p role="alert" className="border-t border-red-100 bg-red-50 px-4 py-2 text-sm text-red-800 sm:px-6">
+            {fileError}
+          </p>
+        )}
         {contentError && (
           <p role="alert" className="border-t border-amber-100 bg-amber-50 px-4 py-2 text-sm text-amber-900 sm:px-6">
             Part of this document couldn't be displayed, so editing is disabled to avoid overwriting it.
@@ -143,10 +195,10 @@ export function DocumentEditor({ client, doc, onChanged, onDeleted }: DocumentEd
         )}
       </header>
 
-      <div className="min-h-0 flex-1 overflow-y-auto bg-slate-100/70 px-2 py-4 sm:px-6 sm:py-8">
-        <article className="mx-auto min-h-[60vh] w-full max-w-[816px] rounded-sm bg-white px-5 py-8 shadow-sm ring-1 ring-slate-200 sm:px-16 sm:py-14">
+      <div className="min-h-0 flex-1 overflow-y-auto bg-slate-100/70 px-2 py-4 sm:px-6 sm:py-8 print:block print:overflow-visible print:bg-white print:p-0">
+        <PagedSheet>
           <EditorContent editor={editor} />
-        </article>
+        </PagedSheet>
       </div>
 
       {dialog === 'share' && <ShareDialog client={client} doc={doc} onClose={() => setDialog(null)} />}
